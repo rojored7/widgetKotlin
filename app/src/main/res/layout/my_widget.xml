@@ -16,6 +16,13 @@
         android:textSize="24sp"
         android:textStyle="bold|italic" />
 
+    <TextView
+        android:id="@+id/work_manager_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Count: 0"
+        android:layout_marginTop="8dp" />
+
     <Button
         android:id="@+id/button"
         android:layout_width="wrap_content"
