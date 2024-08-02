@@ -13,6 +13,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.instana.android.Instana
 import java.util.concurrent.TimeUnit
 
 class MyWidget : AppWidgetProvider() {
@@ -35,7 +36,7 @@ class MyWidget : AppWidgetProvider() {
         }
 
         val trackingWorkRequest: PeriodicWorkRequest =
-            PeriodicWorkRequestBuilder<TrackingWorker>(10, TimeUnit.SECONDS)
+            PeriodicWorkRequestBuilder<TrackingWorker>(15, TimeUnit.MINUTES)
                 .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -60,10 +61,24 @@ class MyWidget : AppWidgetProvider() {
 
         if (context != null && action == "increase") {
             val prefs = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
+            val newCount = (prefs.getString("widgetText", "0") ?: "0").toInt() + 1
             prefs.edit().putString(
                 "widgetText",
                 ((prefs.getString("widgetText", "0") ?: "0").toInt() + 1).toString()
             ).apply()
+
+            // Enviar datos a Instana
+            val trackingData = mapOf(
+                "event" to "ButtonClick",
+                "description" to "User clicked the button",
+                "count" to newCount.toString()
+            )
+            Instana.meta.putAll(trackingData)
+
+            Log.d("MyWidget", "Sent button click data to Instana: $trackingData")
+
+            // Verificar la conectividad con Instana
+            MyApp.verifyInstanaConnectivity()
 
             updateWidgets(context)
         }

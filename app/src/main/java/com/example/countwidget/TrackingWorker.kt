@@ -28,7 +28,7 @@ class TrackingWorker(appContext: Context, workerParams: WorkerParameters) :
         Instana.meta.putAll(trackingData)
         Log.d("TrackingWorker", "Sent tracking data to Instana: $trackingData")
         // Verificar la conectividad con Instana
-        (applicationContext as MyApp).verifyInstanaConnectivity()
+        MyApp.verifyInstanaConnectivity()
 
         // Actualizar el widget
         updateWidgets(applicationContext)
