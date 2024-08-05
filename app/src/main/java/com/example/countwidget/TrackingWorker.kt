@@ -1,34 +1,37 @@
 package com.example.countwidget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
+import com.instana.android.CustomEvent
 import com.instana.android.Instana
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class TrackingWorker(appContext: Context, workerParams: WorkerParameters) :
-    Worker(appContext, workerParams) {
+class TrackingWorker(appContext: Context, workerParams: WorkerParameters) : Worker(appContext, workerParams) {
 
     override fun doWork(): Result {
-        Log.d("TrackingWorker", "Periodic tracking event")
-
-        // Incrementar el contador en SharedPreferences
-        val prefs = applicationContext.getSharedPreferences(applicationContext.packageName, Context.MODE_PRIVATE)
-        val count = prefs.getInt("workManagerCount", 0) + 1
-        prefs.edit().putInt("workManagerCount", count).apply()
+        // Obtener la hora actual
+        val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
 
         // Enviar datos a Instana
-        val trackingData = mapOf(
-            "event" to "TrackingEvent",
-            "description" to "Periodic tracking event",
-            "count" to count.toString()
-        )
-        Instana.meta.putAll(trackingData)
+        val trackingData = mutableMapOf<String, String>()
+        trackingData["description"] = "Periodic tracking event"
+        trackingData["time"] = currentTime
+
+        // Crear el CustomEvent
+        val customEvent = CustomEvent(eventName = "TrackingEvent")
+        customEvent.meta = trackingData
+
+        // Reportar el evento a Instana
+        Instana.reportEvent(customEvent)
+
+        // Log para verificar que se envió el evento
         Log.d("TrackingWorker", "Sent tracking data to Instana: $trackingData")
-        // Verificar la conectividad con Instana
-        MyApp.verifyInstanaConnectivity()
 
         // Actualizar el widget
         updateWidgets(applicationContext)

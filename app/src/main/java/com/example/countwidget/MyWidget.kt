@@ -13,6 +13,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.instana.android.CustomEvent
 import com.instana.android.Instana
 import java.util.concurrent.TimeUnit
 
@@ -64,7 +65,7 @@ class MyWidget : AppWidgetProvider() {
             val newCount = (prefs.getString("widgetText", "0") ?: "0").toInt() + 1
             prefs.edit().putString(
                 "widgetText",
-                ((prefs.getString("widgetText", "0") ?: "0").toInt() + 1).toString()
+                newCount.toString()
             ).apply()
 
             // Enviar datos a Instana
@@ -73,7 +74,9 @@ class MyWidget : AppWidgetProvider() {
                 "description" to "User clicked the button",
                 "count" to newCount.toString()
             )
-            Instana.meta.putAll(trackingData)
+            Instana.reportEvent(
+                CustomEvent(eventName = "ButtonClick")
+            )
 
             Log.d("MyWidget", "Sent button click data to Instana: $trackingData")
 
@@ -82,7 +85,6 @@ class MyWidget : AppWidgetProvider() {
 
             updateWidgets(context)
         }
-
     }
 
     override fun onEnabled(context: Context) {
@@ -113,14 +115,13 @@ class MyWidget : AppWidgetProvider() {
             val prefs = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
             val widgetText = prefs.getString("widgetText", "0")
 
-
-            // Construct the RemoteViews object
+            // Construir el objeto RemoteViews
             val views = RemoteViews(context.packageName, R.layout.my_widget)
             views.setTextViewText(R.id.appwidget_text, widgetText)
             views.setTextViewText(R.id.work_manager_count, "Count: $count")
 
             views.setOnClickPendingIntent(R.id.button, pendingIntent(context, "increase"))
-            // Instruct the widget manager to update the widget
+            // Instruir al administrador del widget para actualizar el widget
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
